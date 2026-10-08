@@ -80,6 +80,7 @@ docker compose exec app node server/src/seed.js   # optional demo data
 
 **Single service (recommended).** Build the Docker image, or run `npm ci && npm run build && npm start`, on any Node host: Render, Railway, Fly.io, a VPS and so on. Point `MONGODB_URI` at MongoDB Atlas.
 
+- **Azure App Service:** a GitHub Actions workflow is included. See [docs/AZURE.md](docs/AZURE.md).
 - **Render:** push to GitHub → *New → Blueprint* → select this repo (`render.yaml`) → set `MONGODB_URI`.
 - Health check endpoint: `GET /api/health`. It returns 503 if the database is unreachable.
 - Behind HTTPS, cookies are `Secure` automatically (`NODE_ENV=production`).

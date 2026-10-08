@@ -1,0 +1,86 @@
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: careertrack-app   # <-- change to your App Service name
+  NODE_VERSION: '22'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'"
+          --health-interval 10s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install, lint and test
+        run: |
+          npm ci
+          npm run lint
+          npm test
+        env:
+          MONGODB_URI_TEST: mongodb://127.0.0.1:27017
+
+      - name: Build React client
+        run: npm run build
+
+      - name: Prepare deployment package (server + built client, production deps only)
+        run: |
+          mkdir -p deploy/server deploy/client
+          cp package.json package-lock.json deploy/
+          cp server/package.json deploy/server/
+          cp -r server/src deploy/server/src
+          cp client/package.json deploy/client/
+          cp -r client/dist deploy/client/dist
+          cd deploy
+          npm ci --omit=dev -w server --include-workspace-root=false --no-audit --no-fund
+          zip -qr ../app.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: app.zip
+          retention-days: 7
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.webapp-url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: app
+
+      - name: Deploy to Azure Web App
+        id: deploy
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: app.zip
+
+      - name: Smoke test
+        run: |
+          url="${{ steps.deploy.outputs.webapp-url }}/api/health"
+          for i in $(seq 1 30); do
+            if curl -fsS "$url"; then echo; echo "Healthy"; exit 0; fi
+            echo "Waiting for app to start ($i/30)…"; sleep 10
+          done
+          echo "Health check failed: $url"; exit 1
