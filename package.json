@@ -1,0 +1,29 @@
+{
+  "name": "career-track",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CareerTrack – Smart Job Application & Career Management System (MERN)",
+  "type": "module",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "npm run build -w client",
+    "start": "npm run start -w server",
+    "seed": "npm run seed -w server",
+    "test": "npm test -w server && npm test -w client",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "globals": "^17.13.0"
+  }
+}

@@ -1,0 +1,16 @@
+# One-click deploy on Render (Blueprint). Use MongoDB Atlas for the database.
+services:
+  - type: web
+    name: careertrack
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
