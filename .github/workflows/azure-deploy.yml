@@ -2,11 +2,11 @@ name: Deploy to Azure App Service
 
 on:
   push:
-    branches: [main]
+    branches: [main, claude/slide-content-review-k7t1o8]
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: careertrack-app   # <-- change to your App Service name
+  AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
   NODE_VERSION: '22'
 
 jobs:
@@ -64,6 +64,13 @@ jobs:
       name: production
       url: ${{ steps.deploy.outputs.webapp-url }}
     steps:
+      - name: Check Azure deployment configuration
+        env:
+          PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        run: |
+          test -n "$AZURE_WEBAPP_NAME" || { echo "::error::Set the AZURE_WEBAPP_NAME repository variable."; exit 1; }
+          test -n "$PUBLISH_PROFILE" || { echo "::error::Set the AZURE_WEBAPP_PUBLISH_PROFILE repository secret."; exit 1; }
+
       - uses: actions/download-artifact@v4
         with:
           name: app

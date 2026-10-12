@@ -1,6 +1,6 @@
 # Deploy CareerTrack to Azure App Service
 
-The workflow `.github/workflows/azure-deploy.yml` runs on every push to `main` (or manually from the **Actions** tab). It works in this order:
+The workflow `.github/workflows/azure-deploy.yml` runs on every push to `claude/slide-content-review-k7t1o8` or `main` (or manually from the **Actions** tab). It works in this order:
 
 1. lint and test (against a temporary MongoDB)
 2. build the React client
@@ -21,7 +21,7 @@ In Atlas, allow access from Azure under *Network Access*: add the Web App's outb
 
 ```bash
 RG=careertrack-rg
-APP=careertrack-app          # must be globally unique; also set AZURE_WEBAPP_NAME in the workflow
+APP=careertrack-app          # must be globally unique; also set the AZURE_WEBAPP_NAME repository variable
 LOCATION=centralindia
 
 az group create -n $RG -l $LOCATION
@@ -52,11 +52,11 @@ You don't need to set a startup command. App Service runs `npm start` and provid
 2. In GitHub, go to **Settings → Secrets and variables → Actions → New repository secret**:
    - Name: `AZURE_WEBAPP_PUBLISH_PROFILE`
    - Value: the full contents of `profile.xml`
-3. Edit `AZURE_WEBAPP_NAME` at the top of `.github/workflows/azure-deploy.yml` to match `$APP`.
+3. In **Settings → Secrets and variables → Actions → Variables**, create a repository variable named `AZURE_WEBAPP_NAME` with the value of `$APP`.
 
 ### 4. Deploy
 
-Push to `main`, or open **Actions → Deploy to Azure App Service → Run workflow**. When it finishes, the app is live at `https://<APP>.azurewebsites.net`.
+Push to `claude/slide-content-review-k7t1o8` (the current default branch), or open **Actions → Deploy to Azure App Service → Run workflow**. When it finishes, the app is live at `https://<APP>.azurewebsites.net`.
 
 Optional: load demo data from Azure's SSH console (Portal → Web App → *SSH*):
 `cd /home/site/wwwroot && node server/src/seed.js`
